@@ -1,0 +1,16 @@
+FROM node:alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY index.ts .env ./
+RUN npx tsc index.ts
+
+FROM node:alpine
+WORKDIR /app
+RUN adduser -D user
+COPY package*.json ./
+RUN npm ci --only=production
+COPY --from=builder /app/index.js ./
+COPY --from=builder /app/.env ./
+USER user
+CMD ["node", "index.js"]
